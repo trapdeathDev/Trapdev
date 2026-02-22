@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHARE BOOST</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        outfit: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#6B21A8',
+                        secondary: '#121212',
+                        success: '#00BA88',
+                        warning: '#FFB800',
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            overflow: hidden;
+        }
+        .max-md-container {
+            height: 100vh;
+            overflow-y: auto;
+            scrollbar-width: none; 
+            -ms-overflow-style: none;  
+        }
+        .max-md-container::-webkit-scrollbar {
+            display: none; 
+        }
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #E5E7EB;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+        .progress-value {
+            height: 100%;
+            background: #6B21A8;
+            transition: width 0.3s ease;
+        }
+        .nav-indicator {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .content-section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .content-section.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .session-card {
+            transition: all 0.3s ease;
+        }
+        .session-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .ripple {
+            position: relative;
+            overflow: hidden;
+        }
+        .ripple:after {
+            content: "";
+            display: block;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            background-image: radial-gradient(circle, #fff 10%, transparent 10.01%);
+            background-repeat: no-repeat;
+            background-position: 50%;
+            transform: scale(10, 10);
+            opacity: 0;
+            transition: transform .5s, opacity 1s;
+        }
+        .ripple:active:after {
+            transform: scale(0, 0);
+            opacity: .3;
+            transition: 0s;
+        }
+        #modal-container {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(4px);
+        }
+        #modal-content {
+            background: white;
+            width: 100%;
+            max-width: 320px;
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            transform: scale(0.95);
+            opacity: 0;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        #modal-icon {
+            background: none !important;
+            padding: 0 !important;
+            margin-bottom: 0.5rem !important;
+            box-shadow: none !important;
+            border: none !important;
+        }
+        #modal-container.active {
+            display: flex;
+        }
+        #modal-container.active #modal-content {
+            transform: scale(1);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="max-w-md mx-auto min-h-screen pb-16 bg-white shadow-lg max-md-container">
+        <header class="p-4 border-b bg-white sticky top-0 z-10 backdrop-blur-lg bg-white/90">
+            <div class="flex items-center justify-between">
+                <div class="flex flex-col">
+                    <h1 class="text-xl font-bold tracking-tight text-primary">SHARE BOOST</h1>
+                    <span class="text-[10px] font-medium text-gray-400 uppercase tracking-widest">Ryoevisu UI</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-medium text-gray-400 bg-gray-100 px-2 py-1 rounded-full">V.0.1</span>
+                </div>
+            </div>
+        </header>
+        <div class="content-sections">
+            <section id="home-section" class="content-section active">
+                <div class="p-4">
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="bg-primary/5 p-4 rounded-2xl border border-primary/10">
+                            <div class="text-gray-500 text-xs font-medium mb-1">Active Sessions</div>
+                            <div class="text-2xl font-bold text-primary" id="activeSessions">0</div>
+                        </div>
+                        <div class="bg-success/5 p-4 rounded-2xl border border-success/10">
+                            <div class="text-gray-500 text-xs font-medium mb-1">Total Shares</div>
+                            <div class="text-2xl font-bold text-success" id="totalShares">0</div>
+                        </div>
+                    </div>
+                    <form id="shareForm" class="mb-6 space-y-4">
+                        <div class="relative">
+                            <label class="text-sm text-gray-600 mb-1 block flex items-center gap-2">
+                                <i data-lucide="cookie" class="w-4 h-4"></i>
+                                Facebook Cookies
+                            </label>
+                            <textarea name="cookie" class="w-full p-3 rounded-lg border focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all" rows="3" placeholder="Paste your cookies here"></textarea>
+                        </div>
+                        <div class="relative">
+                            <label class="text-sm text-gray-600 mb-1 block flex items-center gap-2">
+                                <i data-lucide="link" class="w-4 h-4"></i>
+                                Post URL
+                            </label>
+                            <input type="url" name="url" class="w-full p-3 rounded-lg border focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all" placeholder="https://facebook.com/...">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="relative">
+                                <label class="text-sm text-gray-600 mb-1 block flex items-center gap-2">
+                                    <i data-lucide="hash" class="w-4 h-4"></i>
+                                    Amount
+                                </label>
+                                <input type="number" name="amount" class="w-full p-3 rounded-lg border focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all" placeholder="100">
+                            </div>
+                            <div class="relative">
+                                <label class="text-sm text-gray-600 mb-1 block flex items-center gap-2">
+                                    <i data-lucide="timer" class="w-4 h-4"></i>
+                                    Interval (s)
+                                </label>
+                                <input type="number" name="interval" class="w-full p-3 rounded-lg border focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all" placeholder="5">
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full bg-primary text-white py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors ripple flex items-center justify-center gap-2">
+                            <i data-lucide="play" class="w-5 h-5"></i>
+                            Start Sharing
+                        </button>
+                    </form>
+                    <div id="sessions" class="space-y-4"></div>
+                </div>
+            </section>
+            <section id="sessions-section" class="content-section">
+                <div class="p-4">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="layout-list" class="w-5 h-5 text-primary"></i>
+                            <h2 class="text-lg font-semibold">All Sessions</h2>
+                        </div>
+                        <span class="text-sm bg-primary/10 text-primary px-2 py-1 rounded-full" id="totalSessionsCount">0 sessions</span>
+                    </div>
+                    <div id="allSessions" class="space-y-4"></div>
+                </div>
+            </section>
+            <section id="about-section" class="content-section">
+                <div class="p-4 space-y-6">
+                    <div>
+                        <div class="flex items-center gap-2 mb-3">
+                            <i data-lucide="info" class="w-5 h-5 text-primary"></i>
+                            <h2 class="text-lg font-semibold">About SHARE BOOST</h2>
+                        </div>
+                        <p class="text-gray-600 text-sm leading-relaxed">
+                            SHARE BOOST is a powerful automation tool designed to help you increase the visibility of your Facebook posts through automated sharing. It manages multiple sessions and provides real-time progress tracking.
+                        </p>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2 mb-3">
+                            <i data-lucide="book-open" class="w-5 h-5 text-primary"></i>
+                            <h2 class="text-lg font-semibold">How to Use</h2>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="flex gap-3">
+                                <div class="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-xs flex-shrink-0">1</div>
+                                <div class="text-sm">
+                                    <span class="font-medium block">Get Facebook Cookies</span>
+                                    <span class="text-gray-500">Extract your cookies from a logged-in Facebook session using a browser extension.</span>
+                                </div>
+                            </div>
+                            <div class="flex gap-3">
+                                <div class="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-xs flex-shrink-0">2</div>
+                                <div class="text-sm">
+                                    <span class="font-medium block">Enter Post Details</span>
+                                    <span class="text-gray-500">Paste the full URL of the Facebook post you want to boost.</span>
+                                </div>
+                            </div>
+                            <div class="flex gap-3">
+                                <div class="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-xs flex-shrink-0">3</div>
+                                <div class="text-sm">
+                                    <span class="font-medium block">Configure Settings</span>
+                                    <span class="text-gray-500">Set the total amount of shares and the interval (in seconds) between each share.</span>
+                                </div>
+                            </div>
+                            <div class="flex gap-3">
+                                <div class="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-xs flex-shrink-0">4</div>
+                                <div class="text-sm">
+                                    <span class="font-medium block">Start Boosting</span>
+                                    <span class="text-gray-500">Click "Start Sharing" and monitor progress in the Home or Sessions tab.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-warning/10 p-4 rounded-xl border border-warning/20">
+                        <div class="flex items-center gap-2 mb-1 text-warning">
+                            <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                            <span class="text-xs font-semibold uppercase">Important Tip</span>
+                        </div>
+                        <p class="text-xs text-gray-600">
+                            Use longer intervals (30s+) and moderate share amounts to keep your account safe from Facebook's automated detection.
+                        </p>
+                    </div>
+                </div>
+            </section>
+        </div>
+        <nav class="fixed bottom-0 left-0 right-0 bg-white border-t max-w-md mx-auto backdrop-blur-lg bg-white/90">
+            <div class="relative">
+                <div class="flex justify-around items-center px-6 py-2">
+                    <a href="#" data-section="home" class="nav-item flex flex-col items-center text-primary relative p-2">
+                        <i data-lucide="home" class="w-6 h-6"></i>
+                        <span class="text-xs mt-1">Home</span>
+                    </a>
+                    <a href="#" data-section="sessions" class="nav-item flex flex-col items-center text-gray-400 relative p-2">
+                        <i data-lucide="activity" class="w-6 h-6"></i>
+                        <span class="text-xs mt-1">Sessions</span>
+                    </a>
+                    <a href="#" data-section="about" class="nav-item flex flex-col items-center text-gray-400 relative p-2">
+                        <i data-lucide="info" class="w-6 h-6"></i>
+                        <span class="text-xs mt-1">About</span>
+                    </a>
+                </div>
+                <div class="nav-indicator absolute bottom-0 left-0 h-0.5 bg-primary transition-transform duration-300" style="width: 33.33%"></div>
+            </div>
+        </nav>
+        <div id="modal-container">
+            <div id="modal-content">
+                <div id="modal-icon" class="mx-auto w-16 h-16 flex items-center justify-center mb-4">
+                    <i data-lucide="check" class="w-8 h-8"></i>
+                </div>
+                <h3 id="modal-title" class="text-xl font-bold mb-2">Success!</h3>
+                <p id="modal-message" class="text-gray-500 mb-6 text-sm">Action completed successfully.</p>
+                <button onclick="closeModal()" class="w-full py-3 bg-gray-900 text-white rounded-xl font-medium ripple">
+                    Dismiss
+                </button>
+            </div>
+        </div>
+    </div>
+    <script>
+        const navItems = document.querySelectorAll('.nav-item');
+        const sections = document.querySelectorAll('.content-section');
+        const navIndicator = document.querySelector('.nav-indicator');
+        window.addEventListener('DOMContentLoaded', () => {
+            const hasSeenUpdate = localStorage.getItem('update_seen_v0.1');
+            if (!hasSeenUpdate) {
+                showModal('success', 'Update Modified by Jaymar Xedd', `
+                    <div class="text-center mb-4">
+                        <img src="https://l.top4top.io/p_3705cbocx0.jpg" class="w-20 h-20 rounded-full mx-auto border-4 border-primary/20 object-cover" alt="Logo">
+                    </div>
+                    <div class="text-left space-y-2 mt-2">
+                        <p class="font-bold text-gray-700">What's new?</p>
+                        <ul class="text-xs text-gray-500 space-y-1 list-none">
+                            <li>— Fix session</li>
+                            <li>— Improve UI (Just a little)</li>
+                            <li>— Add support datr cookie</li>
+                            <li>— Add about Section</li>
+                            <li>— Remove switch toggle theme</li>
+                        </ul>
+                        <div class="flex justify-center gap-4 pt-4 border-t mt-4">
+                            <a href="https://www.facebook.com/ioarkdev.00" target="_blank" class="text-blue-600 hover:opacity-80 transition-opacity">
+                                <i data-lucide="facebook" class="w-6 h-6"></i>
+                            </a>
+                            <a href="https://github.com/Ryokidev" target="_blank" class="text-gray-900 hover:opacity-80 transition-opacity">
+                                <i data-lucide="github" class="w-6 h-6"></i>
+                            </a>
+                        </div>
+                    </div>
+                `);
+                localStorage.setItem('update_seen_v0.1', 'true');
+            }
+        });
+        function showModal(type, title, message) {
+            const container = document.getElementById('modal-container');
+            const icon = document.getElementById('modal-icon');
+            const titleEl = document.getElementById('modal-title');
+            const messageEl = document.getElementById('modal-message');
+            const configs = {
+                success: {
+                    bg: 'bg-green-100',
+                    text: 'text-green-600',
+                    icon: 'check-circle'
+                },
+                error: {
+                    bg: 'bg-red-100',
+                    text: 'text-red-600',
+                    icon: 'x-circle'
+                },
+                invalid: {
+                    bg: 'bg-amber-100',
+                    text: 'text-amber-600',
+                    icon: 'alert-triangle'
+                }
+            };
+            const config = configs[type] || configs.success;
+            icon.className = `mx-auto w-16 h-16 flex items-center justify-center mb-4 ${config.text}`;
+            icon.style.backgroundColor = 'transparent';
+            icon.style.boxShadow = 'none';
+            icon.style.border = 'none';
+            if (message.includes('<img')) {
+                icon.style.display = 'none';
+            } else {
+                icon.style.display = 'flex';
+                icon.innerHTML = `<i data-lucide="${config.icon}" class="w-12 h-12"></i>`;
+            }
+            titleEl.textContent = title;
+            messageEl.innerHTML = message; 
+            lucide.createIcons();
+            container.classList.add('active');
+        }
+        function closeModal() {
+            document.getElementById('modal-container').classList.remove('active');
+        }
+        navItems.forEach((item, index) => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const sectionId = item.dataset.section;
+                navItems.forEach(navItem => {
+                    navItem.classList.remove('text-primary');
+                    navItem.classList.add('text-gray-400');
+                });
+                item.classList.remove('text-gray-400');
+                item.classList.add('text-primary');
+                navIndicator.style.transform = `translateX(${index * 100}%)`;
+                sections.forEach(section => {
+                    section.classList.remove('active');
+                    if (section.id === `${sectionId}-section`) {
+                        section.classList.add('active');
+                    }
+                });
+            });
+        });
+        document.getElementById('shareForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitButton = e.target.querySelector('button[type="submit"]');
+            const originalContent = submitButton.innerHTML;
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            if (!data.cookie.includes('c_user') && !data.cookie.includes('sb')) {
+                showModal('invalid', 'Invalid Cookie', 'The cookie format seems incorrect. Please ensure it includes "sb" or "c_user".');
+                return;
+            }
+            if (!data.url.includes('facebook.com') && !data.url.includes('fb.watch')) {
+                showModal('invalid', 'Invalid URL', 'Please provide a valid Facebook post URL.');
+                return;
+            }
+            try {
+                submitButton.innerHTML = `
+                    <i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i>
+                    Processing...
+                `;
+                lucide.createIcons();
+                const response = await fetch('/api/submit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                });
+                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to start sharing');
+                }
+                showModal('success', 'Session Started', 'Successfully initiated the sharing process. Check the sessions tab for progress.');
+                e.target.reset();
+            } catch (error) {
+                showModal('error', 'Error Occurred', error.message);
+                console.error('Error:', error);
+            } finally {
+                submitButton.innerHTML = originalContent;
+                lucide.createIcons();
+            }
+        });
+        async function updateSessions() {
+            try {
+                const response = await fetch('/total');
+                const sessions = await response.json();
+                document.getElementById('activeSessions').textContent = sessions.length;
+                document.getElementById('totalShares').textContent = sessions.reduce((acc, session) => acc + session.count, 0);
+                document.getElementById('totalSessionsCount').textContent = `${sessions.length} sessions`;
+                const sessionTemplate = session => `
+                    <div class="session-card p-4 bg-white rounded-lg border hover:border-primary transition-all">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                                    <i data-lucide="share-2" class="w-4 h-4 text-primary"></i>
+                                </div>
+                                <div>
+                                    <div class="font-medium text-secondary">Session ${session.session}</div>
+                                    <div class="text-xs text-gray-500">${new Date().toLocaleTimeString()}</div>
+                                </div>
+                            </div>
+                            <div class="text-sm font-medium ${session.count >= session.target ? 'text-success' : (session.error ? 'text-red-500' : 'text-primary')}">
+                                ${session.count}/${session.target}
+                            </div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-value" style="width: ${(session.count / session.target) * 100}%; background: ${session.error ? '#EF4444' : '#6B21A8'}"></div>
+                        </div>
+                        ${session.error ? `<div class="mt-2 text-xs text-red-500 bg-red-50 p-2 rounded border border-red-100 flex items-center gap-1">
+                            <i data-lucide="alert-circle" class="w-3 h-3"></i>
+                            ${session.error}
+                        </div>` : ''}
+                    </div>
+                `;
+                document.getElementById('sessions').innerHTML = sessions.slice(0, 3).map(sessionTemplate).join('');
+                document.getElementById('allSessions').innerHTML = sessions.map(sessionTemplate).join('');
+                lucide.createIcons();
+            } catch (error) {
+                console.error('Update error:', error);
+            }
+        }
+        setInterval(updateSessions, 2000);
+        updateSessions();
+        lucide.createIcons();
+    </script>
+</body>
+</html>
